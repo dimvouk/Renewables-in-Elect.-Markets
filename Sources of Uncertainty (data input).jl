@@ -1,7 +1,9 @@
-
 # Sources of uncertainty
 
 #--------------------------------------------
+
+using Random, Distributions 
+
 
 # Hourly wind power production in the next day (6 Scenarios in total)
 
@@ -65,29 +67,27 @@ price_da = [
 
 # Power system need (10 Scenarios in total)
 
-using Random, Distributions 
 
 n = 24  # 24 hours of the day
 p = 0.5  # probability of success
 
 # initialize an empty matrix to store the hourly need of the system
 
-System_need_rand = zeros(Int, 0, n) 
+System_need_rand = zeros(Int, 0, n)
+
 
 # generate the matrix of 0s and 1s with a Bernoulli distribution
 
 for i in 1:10
-
     v = rand(Bernoulli(p), n)
-    
-    System_need_rand = vcat(System_need_rand, v')
-
+    global System_need_rand = vcat(System_need_rand , v')
 end
 
 # Every time the code generates a new matrix so we just save one output on the following one
 
 # Ones is for system excess and zeros for system deficit
 
+#=
 System_need = [ 
 1  1  0  0  1  1  0  1  1  0  0  1  0  1  0  1  0  1  0  0  0  1  0  0;
 1  1  1  1  0  1  0  1  0  1  0  1  0  0  0  0  0  1  1  1  1  1  0  0;
@@ -101,4 +101,4 @@ System_need = [
 0  0  0  1  1  1  1  0  1  0  1  0  1  0  0  1  0  1  0  0  0  0  1  1
 ]
 
-
+=#
