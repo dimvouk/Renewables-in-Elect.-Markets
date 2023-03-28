@@ -65,7 +65,7 @@ price_da = [
 
 # Power system need (10 Scenarios in total)
 
-using Random
+using Random, Distributions 
 
 n = 24  # 24 hours of the day
 p = 0.5  # probability of success
@@ -80,9 +80,8 @@ for i in 1:10
 
     v = rand(Bernoulli(p), n)
     
-    System_need_rand = vcat(System_need, v')
+    System_need_rand = vcat(System_need_rand, v')
 
-    
 end
 
 # Every time the code generates a new matrix so we just save one output on the following one
