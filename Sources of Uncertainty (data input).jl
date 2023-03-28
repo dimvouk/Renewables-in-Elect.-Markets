@@ -68,7 +68,8 @@ price_da = [
 # Power system need (10 Scenarios in total)
 
 
-n = 24  # 24 hours of the day
+
+n = 10  # 10 different scenarios 
 p = 0.5  # probability of success
 
 # initialize an empty matrix to store the hourly need of the system
@@ -78,7 +79,7 @@ System_need_rand = zeros(Int, 0, n)
 
 # generate the matrix of 0s and 1s with a Bernoulli distribution
 
-for i in 1:10
+for i in 1:24
     v = rand(Bernoulli(p), n)
     global System_need_rand = vcat(System_need_rand , v')
 end
@@ -87,18 +88,32 @@ end
 
 # Ones is for system excess and zeros for system deficit
 
-#=
+
 System_need = [ 
-1  1  0  0  1  1  0  1  1  0  0  1  0  1  0  1  0  1  0  0  0  1  0  0;
-1  1  1  1  0  1  0  1  0  1  0  1  0  0  0  0  0  1  1  1  1  1  0  0;
-1  1  0  0  0  1  1  0  1  0  1  0  1  1  0  0  1  1  0  1  0  0  1  1;
-1  0  0  0  1  0  1  1  1  0  0  0  1  1  0  1  1  1  1  1  0  0  0  0;
-1  0  0  1  1  0  0  1  0  0  1  0  1  0  1  1  0  1  0  1  1  0  1  0;
-1  0  0  1  0  0  1  1  0  1  0  0  0  0  0  1  1  0  1  0  0  1  1  0;
-1  0  1  0  1  0  0  1  0  0  1  0  1  1  1  0  1  0  0  0  0  1  1  1;
-0  1  1  0  0  0  1  0  0  0  1  0  0  1  1  1  0  1  0  1  0  0  1  0;
-0  0  1  1  0  1  1  0  0  0  0  0  0  0  0  1  0  1  0  0  1  0  0  0;
-0  0  0  1  1  1  1  0  1  0  1  0  1  0  0  1  0  1  0  0  0  0  1  1
+    0  0  0  0  0  0  1  1  0  1;
+    1  0  1  0  0  0  1  1  0  1;
+    1  0  0  0  0  0  1  1  0  0;
+    1  1  0  1  0  0  0  1  0  1;
+    0  1  1  1  1  1  0  0  0  1;
+    1  0  0  1  0  1  0  1  0  1;
+    0  0  0  0  1  0  0  1  1  1;
+    1  0  0  1  0  1  0  0  1  0;
+    1  0  0  1  1  0  0  0  1  1;
+    0  0  0  0  0  0  1  1  1  1;
+    0  0  1  1  0  0  1  1  1  1;
+    0  1  0  1  1  0  0  0  0  1;
+    1  1  0  1  1  0  0  0  1  1;
+    0  1  0  0  0  0  1  1  0  1;
+    1  1  0  1  1  0  0  0  1  0;
+    1  0  0  1  1  1  1  0  0  1;
+    0  1  0  1  0  0  1  1  1  0;
+    0  1  0  0  1  1  1  0  0  1;
+    0  0  0  0  1  0  1  0  1  1;
+    1  0  1  0  0  1  1  1  0  1;
+    0  0  1  1  1  1  0  0  0  1;
+    1  0  0  0  0  0  1  0  0  1;
+    1  1  1  1  0  0  1  1  1  0;
+    0  1  0  1  0  0  0  1  0  1
 ]
 
-=#
+
