@@ -5,10 +5,10 @@
 using Random, Distributions 
 
 
-# Hourly wind power production in the next day (6 Scenarios in total)
+# Hourly wind power production in real time (6 Scenarios in total)
 # Based on wind forecast similar to assignment 1, but normalized to a maximum of 150 MW
 
-wind_production_da = [
+wind_production_real = [
     142.67 146.76 89.94 77.35 85.3 57.76; 
     136.37 143.32 88.47 76.58 83.61 56.31; 
     132.28 142.89 86.54 73.96 83.44 55.65; 
