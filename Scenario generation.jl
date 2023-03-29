@@ -23,10 +23,10 @@ end
 
 # Split the scenarios into two sets 
 
-# Training set should contain the first 200 
+# Training set should contain the first 200 scenarios
 
 train_set = scenario[:, :, 1:200]
 
-# Testing set should contain  the rest 400
+# Testing set should contain  the rest 400 scenarios
 
 test_set = scenario[:, :, 201:600]
