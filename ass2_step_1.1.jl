@@ -74,14 +74,26 @@ if termination_status(Step_1_1) == MOI.OPTIMAL
     p_DA_opt_1_1 = zeros(T)
     p_DA_opt_1_1 = value.(p_DA[:])
 
-    # expected profit from each scenario
-    exp_profit_scenarios_1_1 = zeros(S)
+    # profit from day ahead market
+    profit_DA_1_1 = zeros(S)
     for s = 1:S
-        exp_profit_scenarios_1_1[s] = sum(prob * 
-        (seen_scenarios[t, 1, s] * p_DA_opt_1_1[t] 
-        + balancing_price[s, t] * value.(balance_up[t, s])
+        profit_DA_1_1[s] = sum(prob * (seen_scenarios[t, 1, s] * p_DA_opt_1_1[t]) for t = 1:T)
+    end
+    
+
+    # expected profit in the balancing market
+    profit_bal_1_1 = zeros(S)
+    for s = 1:S
+        profit_bal_1_1[s] = sum(prob * 
+        (balancing_price[s, t] * value.(balance_up[t, s])
         - balancing_price[s, t] * value.(balance_down[t, s]))
         for t = 1:T)
+    end
+
+    # expected profit from each scenario
+    profit_scen_1_1 = zeros(S)
+    for s = 1:S
+        profit_scen_1_1[s] = profit_DA_1_1[s] + profit_bal_1_1[s]
     end
 
 else
