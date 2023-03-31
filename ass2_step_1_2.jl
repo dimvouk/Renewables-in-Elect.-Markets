@@ -36,7 +36,7 @@ end
             + 0.9 * seen_scenarios[t, 1, s] * balance_up[t, s] * seen_scenarios[t, 3, s]
             + 1 * seen_scenarios[t, 1, s] * balance_up[t, s] * (1-seen_scenarios[t, 3, s])
             - 1 * seen_scenarios[t, 1, s] * balance_down[t, s] * seen_scenarios[t, 3, s]
-            - 1.2 * seen_scenarios[t, 1, s] * balance_down[t, s] * (1-seen_scenarios[t, 3, s])
+            - 1.3 * seen_scenarios[t, 1, s] * balance_down[t, s] * (1-seen_scenarios[t, 3, s])
             for s = 1:S) for t = 1:T)))
 
 # Define constraints
@@ -75,6 +75,27 @@ if termination_status(Step_1_2) == MOI.OPTIMAL
         - 1.2 * seen_scenarios[t, 1, s] * value.(balance_down[t, s]) * (1-seen_scenarios[t, 3, s])
         for t = 1:T))
     end
+
+
+    # expected profit in the balancing market
+    profit_bal_1_2 = zeros(S)
+    for s = 1:S
+        profit_bal_1_2[s] = sum(prob .* 
+        (0.9 * seen_scenarios[t, 1, s] * value.(balance_up[t, s]) * seen_scenarios[t, 3, s]
+        + 1 * seen_scenarios[t, 1, s] * value.(balance_up[t, s]) * (1-seen_scenarios[t, 3, s])
+        - 1 * seen_scenarios[t, 1, s] * value.(balance_down[t, s]) * seen_scenarios[t, 3, s]
+        - 1.3 * seen_scenarios[t, 1, s] * value.(balance_down[t, s]) * (1-seen_scenarios[t, 3, s])
+        for t = 1:T))
+    end
+
+
+    # profit from day ahead market
+    profit_DA_1_2 = zeros(S)
+    for s = 1:S
+        profit_DA_1_2[s] = sum(prob * (seen_scenarios[t, 1, s] * p_DA_opt_1_2[t]) for t = 1:T)
+    end
+
+   
 
 else
     println("No optimal solution found")
