@@ -15,7 +15,7 @@ T = 24 # Number of time periods
 S = 200 # Number of scenarios
 prob = 0.005 # Probability of each scenario
 Pmax = 150 # Maximum power output of the wind turbine
-beta = 5 # Weighting parameter, the higher the value the more risk adverse the wind producer. Risk-neutral case when 0
+beta = 0.5 # Weighting parameter, the higher the value the more risk adverse the wind producer. Risk-neutral case when 0
 alpha = 0.9 # Confidence level
 
 # Define balancing price for each hour in each scenario
@@ -51,7 +51,8 @@ end
             (seen_scenarios[t, 1, s] * p_DA[t] 
             + balancing_price[s, t] * balance_up[t, s]
             - balancing_price[s, t] * balance_down[t, s])
-            for s = 1:S) for t = 1:T) + beta * (zeta - (1/(1-alpha))
+            for s = 1:S) for t = 1:T) 
+            + beta * (zeta - (1/(1-alpha))
             * sum(prob*eta[s] for s = 1:S)))
 
 # Define constraints
@@ -62,11 +63,11 @@ end
 
 @constraint(Step_1_4_1, [t=1:T, s=1:S],
             imbalance[t, s] == balance_up[t, s] - balance_down[t, s])
+            
 @constraint(Step_1_4_1, [s=1:S], 
-            -sum(prob * 
-            (seen_scenarios[t, 1, s] * p_DA[t] 
+            -sum(seen_scenarios[t, 1, s] * p_DA[t] 
             + balancing_price[s, t] * balance_up[t, s]
-            - balancing_price[s, t] * balance_down[t, s]) for t = 1:T) + zeta - eta[s] <= 0)
+            - balancing_price[s, t] * balance_down[t, s] for t = 1:T) + zeta - eta[s] <= 0)
 
 # Solve model
 optimize!(Step_1_4_1)
@@ -81,7 +82,7 @@ if termination_status(Step_1_4_1) == MOI.OPTIMAL
     println("Expected profit ", exp_profit_1_4_1)
 
     # CVaR value
-    CVaR = (value.(zeta) - 1/(1-alpha) * sum(prob*value.(eta[s]) for s = 1:S for t=1:T))
+    CVaR = (value.(zeta) - 1/(1-alpha) * sum(prob*value.(eta[s]) for s = 1:S))
     println("CVaR value ", CVaR)
     # Optimal power production in the day-ahead market
     p_DA_opt_1_4_1 = zeros(T)
@@ -103,5 +104,9 @@ end
 
 #=
 So conclusion is:
-
+Interpreting CVaR in a risk-averse offering strategy problem involves understanding 
+the confidence level or threshold chosen and the potential loss beyond that level. 
+The CVaR at a 90% confidence level is $101,209, it means that there is a 10% chance of
+incurring a loss greater than $101,209.
+With Beta = 0.5, the expected profit will be 50%*CVaR higher than the risk-neutral case.
 =#
