@@ -13,10 +13,17 @@ include("Scenario generation.jl")
 # Define parameters
 T = 24 # Number of time periods
 S = 200 # Number of scenarios
-prob = 0.005 # Probability of each scenario
+prob = 1/S # Probability of each scenario
 Pmax = 150 # Maximum power output of the wind turbine
-beta = 0.5 # Weighting parameter, the higher the value the more risk adverse the wind producer. Risk-neutral case when 0
-alpha = 0.9 # Confidence level
+beta = [0, 0.25, 0.5, 0.75, 1] # Weighting parameter, the higher the value the more risk adverse the wind producer. Risk-neutral case when 0
+alpha = [0.8, 0.9, 0.95] # Confidence level
+B = length(beta) # Number of beta values
+A = length(alpha) # Number of alpha values
+
+# empty lists for storing results
+CVaR_1_4_1 = zeros(A, B)
+exp_profit_1_4_1 = zeros(A, B)
+p_DA_1_4_1 = zeros(T, A, B)
 
 # Define balancing price for each hour in each scenario
 balancing_price = zeros(S, T)
@@ -32,81 +39,65 @@ end
 
 #----------------------------- Model -----------------------------#
 
-# Create Model
-Step_1_4_1 = Model(Gurobi.Optimizer)
+# Loop over all values of beta and alpha
+for a = 1:A
+    for b=1:B
 
-# Define variables
-@variables Step_1_4_1 begin
-    p_DA[t=1:T] >= 0 # Power production of the wind turbine in the day-ahead market
-    imbalance[t=1:T, s=1:S] # Imbalance between day-ahead and real-time power production
-    balance_up[t=1:T, s=1:S] >= 0 # Upward balance
-    balance_down[t=1:T, s=1:S] >= 0 # Downward balance
-    eta[s=1:S] >=0 # Used in the CVaR: eta value for each scenario
-    zeta # Used in the CVaR
-end
+        # Create Model
+        Step_1_4_1 = Model(Gurobi.Optimizer)
 
-# Define objective function
-@objective(Step_1_4_1, Max,
-            sum(sum(prob * 
-            (seen_scenarios[t, 1, s] * p_DA[t] 
-            + balancing_price[s, t] * balance_up[t, s]
-            - balancing_price[s, t] * balance_down[t, s])
-            for s = 1:S) for t = 1:T) 
-            + beta * (zeta - (1/(1-alpha))
-            * sum(prob*eta[s] for s = 1:S)))
+        # Define variables
+        @variables Step_1_4_1 begin
+        p_DA[t=1:T] >= 0 # Power production of the wind turbine in the day-ahead market
+        imbalance[t=1:T, s=1:S] # Imbalance between day-ahead and real-time power production
+        balance_up[t=1:T, s=1:S] >= 0 # Upward balance
+        balance_down[t=1:T, s=1:S] >= 0 # Downward balance
+        eta[s=1:S] >= 0 # Used in the CVaR: eta value for each scenario
+        zeta # Used in the CVaR
+        end
 
-# Define constraints
-@constraint(Step_1_4_1, [t=1:T], p_DA[t] <= Pmax)
+        # Define objective function
+        @objective(Step_1_4_1, Max,
+                    sum(sum((1-beta[b])*(prob * 
+                    (seen_scenarios[t, 1, s] * p_DA[t] 
+                    + balancing_price[s, t] * balance_up[t, s]
+                    - balancing_price[s, t] * balance_down[t, s]))
+                    for s = 1:S for t = 1:T)) 
+                    + beta[b] * (zeta - (1/(1-alpha[a]))
+                    * sum(prob*eta[s] for s = 1:S))
+                    )
 
-@constraint(Step_1_4_1, [t=1:T, s=1:S], 
-            imbalance[t, s] == seen_scenarios[t, 2, s] - p_DA[t])
+        # Define constraints
+        @constraint(Step_1_4_1, [t=1:T], p_DA[t] <= Pmax)
 
-@constraint(Step_1_4_1, [t=1:T, s=1:S],
-            imbalance[t, s] == balance_up[t, s] - balance_down[t, s])
-            
-@constraint(Step_1_4_1, [s=1:S], 
-            -sum(seen_scenarios[t, 1, s] * p_DA[t] 
-            + balancing_price[s, t] * balance_up[t, s]
-            - balancing_price[s, t] * balance_down[t, s] for t = 1:T) + zeta - eta[s] <= 0)
+        @constraint(Step_1_4_1, [t=1:T, s=1:S], 
+                    imbalance[t, s] == seen_scenarios[t, 2, s] - p_DA[t])
 
-# Solve model
-optimize!(Step_1_4_1)
+        @constraint(Step_1_4_1, [t=1:T, s=1:S],
+                    imbalance[t, s] == balance_up[t, s] - balance_down[t, s])
+                    
+        @constraint(Step_1_4_1, [s=1:S], 
+                    - sum(seen_scenarios[t, 1, s] * p_DA[t] 
+                    + balancing_price[s, t] * balance_up[t, s]
+                    - balancing_price[s, t] * balance_down[t, s] for t = 1:T) + zeta - eta[s] <= 0)
 
-#----------------------------- Results -----------------------------#
+        # Solve model
+        optimize!(Step_1_4_1)
 
-if termination_status(Step_1_4_1) == MOI.OPTIMAL
-    println("Optimal solution found")
+    #----------------------------- Results -----------------------------#
+        
+        # CVaR
+        CVaR_1_4_1[a, b] = (value.(zeta) - 1/(1-alpha[a]) * sum(prob*value.(eta[s]) for s = 1:S))
 
-    # Expected profit
-    exp_profit_1_4_1 = objective_value(Step_1_4_1)
-    println("Expected profit ", exp_profit_1_4_1)
-
-    # CVaR value
-    CVaR = (value.(zeta) - 1/(1-alpha) * sum(prob*value.(eta[s]) for s = 1:S))
-    println("CVaR value ", CVaR)
-    # Optimal power production in the day-ahead market
-    p_DA_opt_1_4_1 = zeros(T)
-    p_DA_opt_1_4_1 = value.(p_DA[:])
-
-    # expected profit from each scenario
-    exp_profit_scenarios_1_4_1 = zeros(S)
-    for s = 1:S
-        exp_profit_scenarios_1_4_1[s] = sum(prob * 
-        (seen_scenarios[t, 1, s] * p_DA_opt_1_4_1[t] 
+        # expected profit
+        exp_profit_1_4_1[a, b] = sum(sum(prob *
+        (seen_scenarios[t, 1, s] * value.(p_DA[t])
         + balancing_price[s, t] * value.(balance_up[t, s])
         - balancing_price[s, t] * value.(balance_down[t, s]))
-        for t = 1:T)
-    end
+        for t = 1:T, s = 1:S))
 
-else
-    println("No optimal solution found")
-end
+        # day-ahead power production
+        p_DA_1_4_1[:, a, b] = value.(p_DA[:])
 
-#=
-So conclusion is:
-Interpreting CVaR in a risk-averse offering strategy problem involves understanding 
-the confidence level or threshold chosen and the potential loss beyond that level. 
-The CVaR at a 90% confidence level is $101,209, it means that there is a 10% chance of
-incurring a loss greater than $101,209.
-With Beta = 0.5, the expected profit will be 50%*CVaR higher than the risk-neutral case.
-=#
+    end # end of beta loop
+end # end of alpha loop

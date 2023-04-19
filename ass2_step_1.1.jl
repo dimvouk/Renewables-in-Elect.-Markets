@@ -13,7 +13,7 @@ include("Scenario generation.jl")
 # Define parameters
 T = 24 # Number of time periods
 S = 200 # Number of scenarios
-prob = 0.005 # Probability of each scenario
+prob = 1/S # Probability of each scenario
 Pmax = 150 # Maximum power output of the wind turbine
 
 # Define balancing price for each hour in each scenario

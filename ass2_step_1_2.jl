@@ -13,7 +13,7 @@ include("Scenario generation.jl")
 # Define parameters
 T = 24 # Number of time periods
 S = 200 # Number of scenarios
-prob = 0.005 # Probability of each scenario
+prob = 1/S # Probability of each scenario
 Pmax = 150 # Maximum power output of the wind turbine
 
 #----------------------------- Model -----------------------------#
@@ -36,7 +36,7 @@ end
             + 0.9 * seen_scenarios[t, 1, s] * balance_up[t, s] * seen_scenarios[t, 3, s]
             + 1 * seen_scenarios[t, 1, s] * balance_up[t, s] * (1-seen_scenarios[t, 3, s])
             - 1 * seen_scenarios[t, 1, s] * balance_down[t, s] * seen_scenarios[t, 3, s]
-            - 1.3 * seen_scenarios[t, 1, s] * balance_down[t, s] * (1-seen_scenarios[t, 3, s])
+            - 1.2 * seen_scenarios[t, 1, s] * balance_down[t, s] * (1-seen_scenarios[t, 3, s])
             for s = 1:S) for t = 1:T)))
 
 # Define constraints
