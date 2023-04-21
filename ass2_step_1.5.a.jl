@@ -1,3 +1,8 @@
+"""
+Out of sample simualtion for script 1.1 
+concerning the 1-price scheme
+"""
+
 # Import libraries
 using JuMP
 using Gurobi
