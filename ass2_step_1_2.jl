@@ -75,6 +75,7 @@ if termination_status(Step_1_2) == MOI.OPTIMAL
         - 1.2 * seen_scenarios[t, 1, s] * value.(balance_down[t, s]) * (1-seen_scenarios[t, 3, s])
         for t = 1:T))
     end
+    println("Expected profit in the scenarios: ", sum(exp_profit_scenarios_1_2))
 
 
     # expected profit in the balancing market
@@ -87,6 +88,7 @@ if termination_status(Step_1_2) == MOI.OPTIMAL
         - 1.3 * seen_scenarios[t, 1, s] * value.(balance_down[t, s]) * (1-seen_scenarios[t, 3, s])
         for t = 1:T))
     end
+    println("Expected profit in the BAL stage: ", sum(profit_bal_1_2))
 
 
     # profit from day ahead market
@@ -94,9 +96,11 @@ if termination_status(Step_1_2) == MOI.OPTIMAL
     for s = 1:S
         profit_DA_1_2[s] = sum(prob * (seen_scenarios[t, 1, s] * p_DA_opt_1_2[t]) for t = 1:T)
     end
+    println("Expected profit in the DA stage:  ", sum(profit_DA_1_2))
 
-   
-
+    println("DA + BAL = ", sum(profit_DA_1_2)+sum(profit_bal_1_2))
+    println("DA [%] = ", (sum(profit_DA_1_2)*100)/exp_profit_1_2)
+    println("BAL [%] = ", (sum(profit_bal_1_2)*100)/exp_profit_1_2)
 else
     println("No optimal solution found")
 end

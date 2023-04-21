@@ -12,7 +12,7 @@ include("Scenario generation.jl")
 
 # Define parameters
 T = 24 # Number of time periods
-S = 200 # Number of scenarios
+S = 400 # Number of scenarios
 prob = 1/S # Probability of each scenario
 Pmax = 150 # Maximum power output of the wind turbine
 
@@ -20,10 +20,10 @@ Pmax = 150 # Maximum power output of the wind turbine
 balancing_price = zeros(S, T)
 for s = 1:S
     for t = 1:T
-        if seen_scenarios[t, 3, s] == 1
-            balancing_price[s, t] = 0.9 * seen_scenarios[t, 1, s]
+        if unseen_scenarios[t, 3, s] == 1
+            balancing_price[s, t] = 0.9 * unseen_scenarios[t, 1, s]
         else
-            balancing_price[s, t] = 1.2 * seen_scenarios[t, 1, s]
+            balancing_price[s, t] = 1.2 * unseen_scenarios[t, 1, s]
         end
     end
 end
@@ -44,7 +44,7 @@ end
 # Define objective function
 @objective(Step_1_1, Max,
             sum(sum(prob * 
-            (seen_scenarios[t, 1, s] * p_DA[t] 
+            (unseen_scenarios[t, 1, s] * p_DA[t] 
             + balancing_price[s, t] * balance_up[t, s]
             - balancing_price[s, t] * balance_down[t, s])
             for s = 1:S) for t = 1:T))
@@ -53,7 +53,7 @@ end
 @constraint(Step_1_1, [t=1:T], p_DA[t] <= Pmax)
 
 @constraint(Step_1_1, [t=1:T, s=1:S], 
-            imbalance[t, s] == seen_scenarios[t, 2, s] - p_DA[t])
+            imbalance[t, s] == unseen_scenarios[t, 2, s] - p_DA[t])
 
 @constraint(Step_1_1, [t=1:T, s=1:S],
             imbalance[t, s] == balance_up[t, s] - balance_down[t, s])
@@ -62,6 +62,8 @@ end
 optimize!(Step_1_1)
 
 #----------------------------- Results -----------------------------#
+#-------------------------------------------------------------------#
+
 
 if termination_status(Step_1_1) == MOI.OPTIMAL
     println("Optimal solution found")
@@ -77,10 +79,9 @@ if termination_status(Step_1_1) == MOI.OPTIMAL
     # profit from day ahead market
     profit_DA_1_1 = zeros(S)
     for s = 1:S
-        profit_DA_1_1[s] = sum(prob * (seen_scenarios[t, 1, s] * p_DA_opt_1_1[t]) for t = 1:T)
+        profit_DA_1_1[s] = sum(prob * (unseen_scenarios[t, 1, s] * p_DA_opt_1_1[t]) for t = 1:T)
     end
     println("Expected profit from DA market: ",sum(profit_DA_1_1))
-    
 
     # expected profit in the balancing market
     profit_bal_1_1 = zeros(S)
@@ -97,7 +98,6 @@ if termination_status(Step_1_1) == MOI.OPTIMAL
     println("BAL [%] = ", (sum(profit_bal_1_1)*100)/exp_profit_1_1)
 
     # expected profit from each scenario
-    3
     profit_scen_1_1 = zeros(S)
     for s = 1:S
         profit_scen_1_1[s] = profit_DA_1_1[s] + profit_bal_1_1[s]
@@ -105,8 +105,10 @@ if termination_status(Step_1_1) == MOI.OPTIMAL
     println("Expected profit for each scenario: ", sum(profit_scen_1_1))
 
 else
-    println("No optimal solution found")
+println("No optimal solution found")
 end
+
+
 
 #=
 So conclusion is:
