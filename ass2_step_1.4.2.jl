@@ -95,3 +95,5 @@ for a = 1:A
         
     end # end of beta loop
 end # end of alpha loop
+    
+println("Expected profit: ", mean(exp_profit_1_4_2))
