@@ -1,6 +1,7 @@
 """
-Out of sample simualtion for script 1.4.1
-concerning the 1-price scheme with inclusion oc CVaR
+Out of sample scenarios for step 1.4.1
+- 1-price scheme 
+- Yes CVaR 
 """
 
 # Import libraries
