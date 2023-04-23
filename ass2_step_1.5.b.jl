@@ -1,6 +1,7 @@
 """
-Out of sample simualtion for script 1.2 
-concerning the 2-price scheme
+Out of sample scenarios for step 1.2
+- 2-price scheme 
+- no CVaR 
 """
 
 # Import libraries
