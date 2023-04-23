@@ -1,7 +1,9 @@
 """
-Out of sample simualtion for script 1.4.2
-concerning the 2-price scheme with inclusion oc CVaR
+Out of sample scenarios for step 1.4.2
+- 2-price scheme 
+- yes CVaR 
 """
+
 
 # Import libraries
 using JuMP
