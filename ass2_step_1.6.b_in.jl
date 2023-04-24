@@ -25,13 +25,13 @@ S = 200 # Number of scenarios
 prob = 1/S # Probability of each scenario
 Pmax = 150 # Maximum power output of the wind turbine
 
-exp_prof = []
+exp_profit_1_2 = zeros(5)
 
-for i = 1:50
+for i = 1:5
 
     # Generate a random permutation of column indices
     col1 = randperm(size(scenario, 1))
-    col2 = randperm(size(scenario, 2))
+    col2 = [1,2,3]
     col3 = randperm(size(scenario, 3))
     # Reorder the columns of the matrix using the permutation
     new_scenario = scenario[col1,col2, col3]
@@ -83,8 +83,8 @@ for i = 1:50
         println("Optimal solution found")
 
         # Expected profit
-        exp_profit_1_2 = objective_value(Step_1_2)
-        append!(exp_prof,exp_profit_1_2)
+        exp_profit_1_2[i] = objective_value(Step_1_2)
+        
 
         # Optimal power production in the day-ahead market
         p_DA_opt_1_2 = zeros(T)
@@ -140,6 +140,6 @@ for i = 1:50
 end
 
 
-println("Expected profit ",exp_prof)
-println(size(exp_prof))
-println("Mean expected profit ",mean(exp_prof))
+println("Expected profit ",exp_profit_1_2)
+println(size(exp_profit_1_2))
+println("Mean expected profit ",mean(exp_profit_1_2))
