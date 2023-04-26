@@ -28,24 +28,24 @@ alpha = [0.8, 0.9, 0.95] # Confidence level
 B = length(beta) # Number of beta values
 A = length(alpha) # Number of alpha values
 
-exp_prof = []
+# empty lists for storing results
+CVaR_1_6d_out = zeros(A, B)
+exp_profit_1_6d_out = zeros(A, B)
+p_DA_1_6d_out = zeros(T, A, B)
+
+iteration = 3
 
 # ----------------------------- Shuffling vector -----------------------------#
-for i = 1:5
+for i = 1:iteration
 
      # Generate a random permutation of column indices
     col1 = randperm(size(scenario, 1))
-    col2 = randperm(size(scenario, 2))
+    col2 = [1,2,3]
     col3 = randperm(size(scenario, 3))
     # Reorder the columns of the matrix using the permutation
     new_scenario = scenario[col1,col2, col3]
     new_seen_scenarios = new_scenario[:,:,1:200]
     new_unseen_scenarios = new_scenario[:,:,201:600]
-
-    # empty lists for storing results
-    CVaR_1_4_2 = zeros(A, B)
-    exp_profit_1_4_2 = zeros(A, B)
-    p_DA_1_4_2 = zeros(T, A, B)
 
     #----------------------------- Model -----------------------------#
 
@@ -54,10 +54,10 @@ for i = 1:5
         for b=1:B
 
             # Create Model
-            Step_1_4_2 = Model(Gurobi.Optimizer)
+            Step_1_6d_out = Model(Gurobi.Optimizer)
 
             # Define variables
-            @variables Step_1_4_2 begin
+            @variables Step_1_6d_out begin
                 p_DA[t=1:T] >= 0 # Power production of the wind turbine in the day-ahead market
                 imbalance[t=1:T, s=1:S] # Imbalance between day-ahead and real-time power production
                 balance_up[t=1:T, s=1:S] >= 0 # Upward balance
@@ -67,7 +67,7 @@ for i = 1:5
             end
 
             # Define objective function
-            @objective(Step_1_4_2, Max,
+            @objective(Step_1_6d_out, Max,
                         sum(sum((1-beta[b])*prob .* 
                         ( new_unseen_scenarios[t, 1, s] * p_DA[t] 
                         + 0.9 *  new_unseen_scenarios[t, 1, s] * balance_up[t, s] *  new_unseen_scenarios[t, 3, s]
@@ -80,15 +80,15 @@ for i = 1:5
                         )
 
             # Define constraints
-            @constraint(Step_1_4_2, [t=1:T], p_DA[t] <= Pmax)
+            @constraint(Step_1_6d_out, [t=1:T], p_DA[t] <= Pmax)
 
-            @constraint(Step_1_4_2, [t=1:T, s=1:S], 
+            @constraint(Step_1_6d_out, [t=1:T, s=1:S], 
                         imbalance[t, s] ==  new_unseen_scenarios[t, 2, s] - p_DA[t])
 
-            @constraint(Step_1_4_2, [t=1:T, s=1:S],
+            @constraint(Step_1_6d_out, [t=1:T, s=1:S],
                         imbalance[t, s] == balance_up[t, s] - balance_down[t, s])
 
-            @constraint(Step_1_4_2, [s=1:S], 
+            @constraint(Step_1_6d_out, [s=1:S], 
             - sum( new_unseen_scenarios[t, 1, s] * p_DA[t] 
             + 0.9 *  new_unseen_scenarios[t, 1, s] * balance_up[t, s] *  new_unseen_scenarios[t, 3, s]
             + 1 *  new_unseen_scenarios[t, 1, s] * balance_up[t, s] * (1- new_unseen_scenarios[t, 3, s])
@@ -97,16 +97,16 @@ for i = 1:5
             for t = 1:T) + zeta - eta[s] <= 0)
 
             # Solve model
-            optimize!(Step_1_4_2)
+            optimize!(Step_1_6d_out)
 
         #----------------------------- Results -----------------------------#
-            if termination_status(Step_1_4_2) == MOI.OPTIMAL
+            if termination_status(Step_1_6d_out) == MOI.OPTIMAL
                 println("Optimal solution found")
                 
-                CVaR_1_4_2[a, b] = (value.(zeta) - 1/(1-alpha[a]) * sum(prob*value.(eta[s]) for s = 1:S))
+                CVaR_1_6d_out[a, b] = (value.(zeta) - 1/(1-alpha[a]) * sum(prob*value.(eta[s]) for s = 1:S))
 
                 # expected profit
-                exp_profit_1_4_2[a, b] = sum(sum(prob .* 
+                exp_profit_1_6d_out[a, b] = sum(sum(prob .* 
                 ( new_unseen_scenarios[t, 1, s] * value.(p_DA[t]) 
                 + 0.9 *  new_unseen_scenarios[t, 1, s] * value.(balance_up[t, s]) *  new_unseen_scenarios[t, 3, s]
                 + 1 *  new_unseen_scenarios[t, 1, s] * value.(balance_up[t, s]) * (1- new_unseen_scenarios[t, 3, s])
@@ -114,13 +114,13 @@ for i = 1:5
                 - 1.2 *  new_unseen_scenarios[t, 1, s] * value.(balance_down[t, s]) * (1- new_unseen_scenarios[t, 3, s])
                 for s = 1:S) for t = 1:T))
 
-                append!(exp_prof,mean(exp_profit_1_4_2))
-
                 # day-ahead power production
-                p_DA_1_4_2[:, a, b] = value.(p_DA[:])
+                p_DA_1_6d_out[:, a, b] = value.(p_DA[:])
             end
         end # end of beta loop
     end # end of alpha loop
 end
 
-println("Expected profit: ", mean(exp_prof))
+println("Expected profit ",exp_profit_1_6d_out)
+println(size(exp_profit_1_6d_out))
+println("Mean expected profit ",mean(exp_profit_1_6d_out))

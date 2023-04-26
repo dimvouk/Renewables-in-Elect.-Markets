@@ -28,14 +28,19 @@ alpha = [0.8, 0.9, 0.95] # Confidence level
 B = length(beta) # Number of beta values
 A = length(alpha) # Number of alpha values
 
-exp_prof = []
+# empty lists for storing results
+CVaR_1_6c_out = zeros(A, B)
+exp_profit_1_6c_out = zeros(A, B)
+p_DA_1_6c_out = zeros(T, A, B)
+
+iteration = 3
 
 # ----------------------------- Shuffling vector -----------------------------#
-for i = 1:5
+for i = 1:iteration
 
      # Generate a random permutation of column indices
     col1 = randperm(size(scenario, 1))
-    col2 = randperm(size(scenario, 2))
+    col2 = [1,2,3]
     col3 = randperm(size(scenario, 3))
     # Reorder the columns of the matrix using the permutation
     new_scenario = scenario[col1,col2, col3]
@@ -45,11 +50,6 @@ for i = 1:5
     println(size(scenario))
     println(size(new_scenario))
     println(size(new_unseen_scenarios))
-    
-    # empty lists for storing results
-    CVaR_1_4_1 = zeros(A, B)
-    exp_profit_1_4_1 = zeros(A, B)
-    p_DA_1_4_1 = zeros(T, A, B)
 
     # Define balancing price for each hour in each scenario
     balancing_price = zeros(S, T)
@@ -70,10 +70,10 @@ for i = 1:5
         for b=1:B
 
             # Create Model
-            Step_1_4_1 = Model(Gurobi.Optimizer)
+            Step_1_6c_out = Model(Gurobi.Optimizer)
 
             # Define variables
-            @variables Step_1_4_1 begin
+            @variables Step_1_6c_out begin
             p_DA[t=1:T] >= 0 # Power production of the wind turbine in the day-ahead market
             imbalance[t=1:T, s=1:S] # Imbalance between day-ahead and real-time power production
             balance_up[t=1:T, s=1:S] >= 0 # Upward balance
@@ -83,7 +83,7 @@ for i = 1:5
             end
 
             # Define objective function
-            @objective(Step_1_4_1, Max,
+            @objective(Step_1_6c_out, Max,
                         sum(sum((1-beta[b])*(prob * 
                         (new_unseen_scenarios[t, 1, s] * p_DA[t] 
                         + balancing_price[s, t] * balance_up[t, s]
@@ -94,37 +94,36 @@ for i = 1:5
                         )
 
             # Define constraints
-            @constraint(Step_1_4_1, [t=1:T], p_DA[t] <= Pmax)
+            @constraint(Step_1_6c_out, [t=1:T], p_DA[t] <= Pmax)
 
-            @constraint(Step_1_4_1, [t=1:T, s=1:S], 
+            @constraint(Step_1_6c_out, [t=1:T, s=1:S], 
                         imbalance[t, s] == new_unseen_scenarios[t, 2, s] - p_DA[t])
 
-            @constraint(Step_1_4_1, [t=1:T, s=1:S],
+            @constraint(Step_1_6c_out, [t=1:T, s=1:S],
                         imbalance[t, s] == balance_up[t, s] - balance_down[t, s])
                         
-            @constraint(Step_1_4_1, [s=1:S], 
+            @constraint(Step_1_6c_out, [s=1:S], 
                         - sum(new_unseen_scenarios[t, 1, s] * p_DA[t] 
                         + balancing_price[s, t] * balance_up[t, s]
                         - balancing_price[s, t] * balance_down[t, s] for t = 1:T) + zeta - eta[s] <= 0)
 
             # Solve model
-            optimize!(Step_1_4_1)
+            optimize!(Step_1_6c_out)
 
         #----------------------------- Results -----------------------------#
             
             # CVaR
-            CVaR_1_4_1[a, b] = (value.(zeta) - 1/(1-alpha[a]) * sum(prob*value.(eta[s]) for s = 1:S))
+            CVaR_1_6c_out[a, b] = (value.(zeta) - 1/(1-alpha[a]) * sum(prob*value.(eta[s]) for s = 1:S))
 
             # expected profit
-            exp_profit_1_4_1[a, b] = sum(sum(prob *
+            exp_profit_1_6c_out[a, b] = sum(sum(prob *
             (new_unseen_scenarios[t, 1, s] * value.(p_DA[t])
             + balancing_price[s, t] * value.(balance_up[t, s])
             - balancing_price[s, t] * value.(balance_down[t, s]))
             for t = 1:T, s = 1:S))
-            append!(exp_prof, mean(exp_profit_1_4_1))
 
             # day-ahead power production
-            p_DA_1_4_1[:, a, b] = value.(p_DA[:])
+            p_DA_1_6c_out[:, a, b] = value.(p_DA[:])
 
         end # end of beta loop
     end # end of alpha loop
@@ -132,6 +131,6 @@ for i = 1:5
 end
 
 
-println("Expected profit ",exp_prof)
-println(size(exp_prof))
-println("Mean expected profit ",mean(exp_prof))
+println("Expected profit ",exp_profit_1_6c_out)
+println(size(exp_profit_1_6c_out))
+println("Mean expected profit ",mean(exp_profit_1_6c_out))

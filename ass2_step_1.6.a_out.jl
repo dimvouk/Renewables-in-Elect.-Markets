@@ -23,14 +23,16 @@ T = 24 # Number of time periods
 S = 400 # Number of scenarios
 prob = 1/S # Probability of each scenario
 Pmax = 150 # Maximum power output of the wind turbine
-exp_prof = []
+
+iteration = 50
+exp_profit_1_6a_out = zeros(iteration)
 
 # ----------------------------- Shuffling vector -----------------------------#
-for i = 1:50
+for i = 1:iteration
 
      # Generate a random permutation of column indices
     col1 = randperm(size(scenario, 1))
-    col2 = randperm(size(scenario, 2))
+    col2 = [1,2,3]
     col3 = randperm(size(scenario, 3))
     # Reorder the columns of the matrix using the permutation
     new_scenario = scenario[col1,col2, col3]
@@ -57,10 +59,10 @@ for i = 1:50
     #----------------------------- Model -----------------------------#
 
     # Create Model
-    Step_1_1 = Model(Gurobi.Optimizer)
+    Step_1_6a_out = Model(Gurobi.Optimizer)
 
     # Define variables
-    @variables Step_1_1 begin
+    @variables Step_1_6a_out begin
         p_DA[t=1:T] >= 0 # Power production of the wind turbine in the day-ahead market
         imbalance[t=1:T, s=1:S] # Imbalance between day-ahead and real-time power production
         balance_up[t=1:T, s=1:S] >= 0 # Upward balance
@@ -68,7 +70,7 @@ for i = 1:50
     end
 
     # Define objective function
-    @objective(Step_1_1, Max,
+    @objective(Step_1_6a_out, Max,
                 sum(sum(prob * 
                 (new_unseen_scenarios[t, 1, s] * p_DA[t] 
                 + balancing_price[s, t] * balance_up[t, s]
@@ -76,42 +78,41 @@ for i = 1:50
                 for s = 1:S) for t = 1:T))
 
     # Define constraints
-    @constraint(Step_1_1, [t=1:T], p_DA[t] <= Pmax)
+    @constraint(Step_1_6a_out, [t=1:T], p_DA[t] <= Pmax)
 
-    @constraint(Step_1_1, [t=1:T, s=1:S], 
+    @constraint(Step_1_6a_out, [t=1:T, s=1:S], 
                 imbalance[t, s] == new_unseen_scenarios[t, 2, s] - p_DA[t])
 
-    @constraint(Step_1_1, [t=1:T, s=1:S],
+    @constraint(Step_1_6a_out, [t=1:T, s=1:S],
                 imbalance[t, s] == balance_up[t, s] - balance_down[t, s])
 
     # Solve model
-    optimize!(Step_1_1)
+    optimize!(Step_1_6a_out)
 
     #----------------------------- Results -----------------------------#
 
-    if termination_status(Step_1_1) == MOI.OPTIMAL
+    if termination_status(Step_1_6a_out) == MOI.OPTIMAL
         println("Optimal solution found")
 
         # Expected profit
-        exp_profit_1_1 = objective_value(Step_1_1)
-        append!(exp_prof, exp_profit_1_1)
+        exp_profit_1_6a_out[i] = objective_value(Step_1_6a_out)
 
         # Optimal power production in the day-ahead market
-        p_DA_opt_1_1 = zeros(T)
-        p_DA_opt_1_1 = value.(p_DA[:])
+        p_DA_opt_1_6a_out = zeros(T)
+        p_DA_opt_1_6a_out = value.(p_DA[:])
 
         # profit from day ahead market
-        profit_DA_1_1 = zeros(S)
+        profit_DA_1_6a_out = zeros(S)
         for s = 1:S
-            profit_DA_1_1[s] = sum(prob * (new_unseen_scenarios[t, 1, s] * p_DA_opt_1_1[t]) for t = 1:T)
+            profit_DA_1_6a_out[s] = sum(prob * (new_unseen_scenarios[t, 1, s] * p_DA_opt_1_6a_out[t]) for t = 1:T)
         end
         #println("Expected profit from DA market: ",sum(profit_DA_1_1))
         
 
         # expected profit in the balancing market
-        profit_bal_1_1 = zeros(S)
+        profit_bal_1_6a_out = zeros(S)
         for s = 1:S
-            profit_bal_1_1[s] = sum(prob * 
+            profit_bal_1_6a_out[s] = sum(prob * 
             (balancing_price[s, t] * value.(balance_up[t, s])
             - balancing_price[s, t] * value.(balance_down[t, s]))
             for t = 1:T)
@@ -124,9 +125,9 @@ for i = 1:50
 
         # expected profit from each scenario
         3
-        profit_scen_1_1 = zeros(S)
+        profit_scen_1_6a_out = zeros(S)
         for s = 1:S
-            profit_scen_1_1[s] = profit_DA_1_1[s] + profit_bal_1_1[s]
+            profit_scen_1_6a_out[s] = profit_DA_1_6a_out[s] + profit_bal_1_6a_out[s]
         end
         #println("Expected profit for each scenario: ", sum(profit_scen_1_1))
 
@@ -145,6 +146,6 @@ for i = 1:50
 end
 
 
-println("Expected profit ",exp_prof)
-println(size(exp_prof))
-println("Mean expected profit ",mean(exp_prof))
+println("Expected profit ",exp_profit_1_6a_out)
+println(size(exp_profit_1_6a_out))
+println("Mean expected profit ",mean(exp_profit_1_6a_out))
