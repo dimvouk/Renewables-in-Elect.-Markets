@@ -7,17 +7,12 @@ using CSV, DataFrames
 
 #**************************************************
 #Get Data
-include("")
+include("ass2.1_data.jl")
 
 #**************************************************
-# Time set 
-T = 1
 
 # Conventional Generator Set [24:12]
-G = 7
-
-# Wind farm set [24 : 6]
-W = 1
+G = 8
 
 # Demand set [24 : 17]
 D = 4
@@ -30,29 +25,26 @@ B = 50
 
 #**************************************************
 # MODEL
-Step3Nodal=Model(Gurobi.Optimizer)
+Step_2_1=Model(Gurobi.Optimizer)
 
 #**************************************************
 
 #Variables - power in MW
-@variable(Step3Nodal,pg[t=1:T,g=1:G] >=0)      #Hourly power generation - Conventional generator g (MW)
-@variable(Step3Nodal,pw[t=1:T,w=1:W] >=0)      #Hourly power generation - Wind farm w (MW) 
-@variable(Step3Nodal,pd[t=1:T,d=1:D] >=0)      #Hourly power demand (MW)
-@variable(Step3Nodal,theta[t=1:T, n=1:N])      #Voltage angle of node n at time t
+@variable(Step_2_1,pg[g=1:G] >=0)      #Hourly power generation - Conventional generator g (MW)
+@variable(Step_2_1,pd[d=1:D] >=0)      #Hourly power demand (MW)
+@variable(Step_2_1,theta[n=1:N])      #Voltage angle of node n at time t
 
 #**************************************************
 
 #Objective function
-@objective(Step3Nodal, Max, 
-sum(demand_bid_hour[t,d] * pd[t,d] for t=1:T,d=1:D)                 #Total offer value 
--sum(conv_gen_cost_hour[t,g] * pg[t,g] for t=1:T,g=1:G)             #Total value of conventional generator production
--sum(wind_cost_hour[t,w] * pw[t,w] for t=1:T,w=1:W)              #Total value of wind energy production         
+@objective(Step_2_1, Max, 
+sum(demand_bid[d] * pd[d] for d=1:D)                 #Total offer value 
+-sum(gen_cost[g] * pg[g] for g=1:G)                #Total value of generator production       
 )
 
 # Capacity constraints
-@constraint(Step3Nodal,[t=1:T,d=1:D], 0 <= pd[t,d] <= demand_cons_hour[t,d] )               # Capacity for demand (MW)
-@constraint(Step3Nodal,[t=1:T,g=1:G], 0 <= pg[t,g] <= conv_gen_cap_hour[t,g] )              # Capacity for conventional generator (MW)
-@constraint(Step3Nodal,[t=1:T,w=1:W], 0 <= pw[t,w] <= wind_forecast_hour[t,w] )             # Capacity for Wind farms (MW)
+@constraint(Step_2_1,[d=1:D], 0 <= pd[d] <= demand_cons[d] )               # Capacity for demand (MW)
+@constraint(Step_2_1,[g=1:G], 0 <= pg[g] <= gen_cap[g] )                   # Capacity for generator (MW)
 
 
 # Transmission capacity constraint
@@ -71,10 +63,10 @@ end
 #@constraint(Step3Nodal, transcap[t=1:T,n=1:N,m=1:N], -transm_capacity[n,m] <= B * (theta[t, n] - theta[t, m]) <= transm_capacity[n,m])
 
 # Voltage angle constraint
-@constraint(Step3Nodal, [t=1:T,n=1:N], -pi <= theta[t, n] <= pi)
+@constraint(Step_2_1, [n=1:N], -pi <= theta[n] <= pi)
 
 # Reference constraintnode
-@constraint(Step3Nodal, [t=1:T], theta[t, 1] == 0)
+@constraint(Step_2_1, theta[1] == 0)
 
 # Create a function that returns the connected nodes in an ingoing and outgoing direction
 connections = length(transm_connections)
@@ -92,33 +84,32 @@ function connected_nodes(node)
 end
 
 # Elasticity constraint, balancing supply and demand
-@constraint(Step3Nodal, powerbalance[t=1:T, n=1:N],
-                0 == sum(pd[t, d] for d in node_dem[n]) + # Demand
-                sum(B * (theta[t, n] - theta[t, m]) for m in connected_nodes(n)[2]) - # Ingoing transmission lines
-                sum(B * (theta[t, m] - theta[t, n]) for m in connected_nodes(n)[1]) - # Outgoing transmission lines
-                sum(pg[t, g] for g in node_conv[n]) - # Conventional generator production
-                sum(pw[t, w] for w in node_wind[n]) # Wind production
+@constraint(Step_2_1, powerbalance[n=1:N],
+                0 == sum(pd[d] for d in node_dem[n]) + # Demand
+                sum(B * (theta[n] - theta[m]) for m in connected_nodes(n)[2]) - # Ingoing transmission lines
+                sum(B * (theta[m] - theta[n]) for m in connected_nodes(n)[1]) - # Outgoing transmission lines
+                sum(pg[g] for g in node_gen[n]) # Conventional generator production
                 )
 
 
 #************************************************************************
 # Solve
-solution = optimize!(Step3Nodal)
+solution = optimize!(Step_2_1)
 #**************************************************
 
 # Constructing outputs:
-market_price = zeros((T,N))
-system_demand = zeros((T,D))
+market_price = zeros(N)
+system_demand = zeros(D)
 
 #Check if optimal solution was found
-if termination_status(Step3Nodal) == MOI.OPTIMAL
+if termination_status(Step_2_1) == MOI.OPTIMAL
     println("Optimal solution found")
 
-    market_price = dual.(powerbalance[:,:])
-    system_demand = value.(pd[:,:])
+    market_price = dual.(powerbalance[:])
+    system_demand = value.(pd[:])
 
     # Print objective value
-    println("Objective value: ", objective_value(Step3Nodal))
+    println("Objective value: ", objective_value(Step_2_1))
 
     #= Remove comment to print market clearing price and power flow in transmission lines .
     
