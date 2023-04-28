@@ -3,7 +3,8 @@ Sensitivity analysis
 - step 1.1 
 - 1-price scheme 
 - 200 in sample scenarios
-. no CVaR
+- 400 out of sample scenarios
+- no CVaR
 """
 
 # Import libraries
