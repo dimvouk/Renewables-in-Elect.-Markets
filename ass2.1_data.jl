@@ -18,6 +18,8 @@ demand_bid = [26.5, 24.7, 23.1, 22.5]
 node_dem = [[], [], [1], [2], [3], [4]]
 
 node_gen = [[1, 5], [2, 6], [3, 7], [], [8], [4]]
+strat_node_gen = [[1], [2], [3], [], [], [4]]
+non_strat_node_gen = [[1], [2], [3], [], [4], []]
 
 
 # Capacity of transmission lines between each node in MW
