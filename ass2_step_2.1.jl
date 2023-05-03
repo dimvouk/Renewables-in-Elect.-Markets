@@ -48,22 +48,14 @@ sum(demand_bid[d] * pd[d] for d=1:D)                 #Total offer value
 
 
 # Transmission capacity constraint
-#= For sensitivity analysis, change to transm_capacity_sensitivity
-for t=1:T
-    for n=1:N
-        for m=1:N   
-            if transm_capacity[n,m] != 0
-                @constraint(Step3Nodal,
-                -transm_capacity[n,m] <= B * (theta[t, n] - theta[t, m]) <= transm_capacity[n,m])
-            end
+for n=1:N
+    for m=1:N   
+        if transm_capacity[n,m] != 0
+            @constraint(Step_2_1,
+            -transm_capacity[n,m] <= B * (theta[n] - theta[m]) <= transm_capacity[n,m])
         end
     end
 end
-=#
-#@constraint(Step3Nodal, transcap[t=1:T,n=1:N,m=1:N], -transm_capacity[n,m] <= B * (theta[t, n] - theta[t, m]) <= transm_capacity[n,m])
-
-# Voltage angle constraint
-@constraint(Step_2_1, [n=1:N], -pi <= theta[n] <= pi)
 
 # Reference constraintnode
 @constraint(Step_2_1, theta[1] == 0)
@@ -111,28 +103,14 @@ if termination_status(Step_2_1) == MOI.OPTIMAL
     # Print objective value
     println("Objective value: ", objective_value(Step_2_1))
 
-    #= Remove comment to print market clearing price and power flow in transmission lines .
     
     # Print hourly market price in each node
     println("Hourly Market clearing price")
     market_price = dual.(powerbalance[:])
-    for t = 1:T
-        for n=1:N
-            println("t$t, n$n: ", dual(powerbalance[t,n]))
-        end
-    end
-    Print power flow in each transmission line
-    println("Power flow in transmission lines")
-    for t = 1:T
     for n=1:N
-            for m=1:N
-                if transm_capacity[n,m] != 0
-                    println("t$t, n$n, m$m: ", B*value(theta[t, n] - theta[t, m]))
-                end
-            end
-        end
+            println("n$n: ", dual(powerbalance[n]))
     end
-=# 
+    
 
 else 
     println("No optimal solution found")
