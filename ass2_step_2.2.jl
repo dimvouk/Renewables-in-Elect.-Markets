@@ -266,12 +266,37 @@ if termination_status(Step_2_2) == MOI.OPTIMAL
     for n= 1:N
         println("Market clearing price for node n$n ", mc_price[n])
     end 
+    
     # strategic offer price
-    str_offer_price = zeros(S)
     str_offer_price = value.(alpha_s_offer[:])
+
+    # sttategic offer schedule
+    str_offer_schedule = value.(ps[:])
+
+    # profit of strategic producers
+    str_profit = zeros(S)
     for s = 1:S
-        println("Strategic offer price for generator S$s: ", str_offer_price[s])
+        str_profit[s] = str_offer_schedule[s] * (str_offer_price[s] - strat_gen_cost[s])
     end 
+    
+    # print
+    for s = 1:S
+        println("Strategic offer price for generator S$s: ", 
+        str_offer_price[s], ", schedule ", str_offer_schedule[s], ", profit ", str_profit[s])
+    end 
+
+    # non-strategic offer schedule
+    non_str_offer_schedule = value.(po[:])
+    for o = 1:O
+        println("Non strategic offer schedule for generator O$o: ", non_str_offer_schedule[o])
+    end
+
+    # Social welfare
+    social_welfare = sum(demand_bid[d] * value.(pd[d]) for d in 1:D)
+                    - sum(strat_gen_cost[s] * str_offer_schedule[s] for s in 1:S)
+                    - sum(non_strat_gen_cost[o] * non_str_offer_schedule[o] for o in 1:O)
+    println("Social welfare: ", social_welfare)
+
 else 
     println("No optimal solution found")
 end
