@@ -31,12 +31,31 @@ transm_capacity =  [[0     2000  2000   0     0     0   ];
                     [0     0     2000   2000  2000     0];
 ]
 
+# 2.3 Capacity of "congested" transmission lines between each node in MW
+transm_capacity_2_3 =  [[0     2000  2000   0     0     0   ];
+                    [2000  0     2000   257.12  0     0   ];
+                    [2000  2000  0      0     0     217.87];
+                    [0     257.12  0      0     2000  2000];
+                    [0     0     0      2000  0     2000];
+                    [0     0     217.87   2000  2000     0];
+]
+
 # make a list of all connections in transm_capacity
 transm_connections = []
 for n=1:6
     for m=1:6
         if transm_capacity[n,m] > 0
             push!(transm_connections, [n,m])
+        end
+    end
+end
+
+# 2.3: make a list of all "congested" connections in transm_capacity
+transm_connections_2_3 = []
+for n=1:6
+    for m=1:6
+        if transm_capacity_2_3[n,m] > 0
+            push!(transm_connections_2_3, [n,m])
         end
     end
 end
