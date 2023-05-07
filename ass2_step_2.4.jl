@@ -30,7 +30,7 @@ A = 20
 # Probability of each scenario
 prob = 1/A
 # Big M 
-M = [4000, 1970, 3500, 20000]
+M = [600, 80000, 250, 500, 550, 25, 5000, 5]
 
 # Create a function that returns the connected nodes in an ingoing and outgoing direction
 connections = length(transm_connections)
@@ -169,31 +169,31 @@ sum(prob * (
 
 @constraint(Step_2_4, [d=1:D, a=1:A], seen_scenarios[d, 3, a] - pd[d, a] <= psi_d_cap[d, a] .* M[1]) 
 
-@constraint(Step_2_4, [d=1:D, a=1:A], mu_d_cap[d, a] <= (1 .- psi_d_cap[d, a]) .* M[1]) 
+@constraint(Step_2_4, [d=1:D, a=1:A], mu_d_cap[d, a] <= (1 .- psi_d_cap[d, a]) .* M[2]) 
 
 @constraint(Step_2_4, [d=1:D, a=1:A], pd[d, a] <= psi_d_undercap[d, a] .* M[1])
 
-@constraint(Step_2_4, [d=1:D, a=1:A], mu_d_undercap[d, a] <= (1 .- psi_d_undercap[d, a]) .* M[1]) 
+@constraint(Step_2_4, [d=1:D, a=1:A], mu_d_undercap[d, a] <= (1 .- psi_d_undercap[d, a]) .* M[2]) 
 
 @constraint(Step_2_4, [s=1:S, a=1:A], 0 <= strat_gen_cap[s] .- ps[s, a]) # Strategic producer capacity constraint
 
-@constraint(Step_2_4, [s=1:S, a=1:A], strat_gen_cap[s] - ps[s, a] <= psi_s_cap[s, a] .* M[2]) 
+@constraint(Step_2_4, [s=1:S, a=1:A], strat_gen_cap[s] - ps[s, a] <= psi_s_cap[s, a] .* M[3]) 
 
-@constraint(Step_2_4, [s=1:S, a=1:A], mu_s_cap[s, a] <= (1 .- psi_s_cap[s, a]) .* M[2]) 
+@constraint(Step_2_4, [s=1:S, a=1:A], mu_s_cap[s, a] <= (1 .- psi_s_cap[s, a]) .* M[4]) 
 
-@constraint(Step_2_4, [s=1:S, a=1:A], ps[s, a] <= psi_s_undercap[s, a] .* M[2])
+@constraint(Step_2_4, [s=1:S, a=1:A], ps[s, a] <= psi_s_undercap[s, a] .* M[3])
 
-@constraint(Step_2_4, [s=1:S, a=1:A], mu_s_undercap[s, a] <= (1 .- psi_s_undercap[s, a]) .* M[2]) 
+@constraint(Step_2_4, [s=1:S, a=1:A], mu_s_undercap[s, a] <= (1 .- psi_s_undercap[s, a]) .* M[4]) 
 
 @constraint(Step_2_4, [o=1:O, a=1:A], 0 <= seen_scenarios[o, 4, a] - po[o, a]) # Non-stratgic producer capacity constraint
 
-@constraint(Step_2_4, [o=1:O, a=1:A], seen_scenarios[o, 4, a] - po[o,a] <= psi_o_cap[o, a] .* M[3]) 
+@constraint(Step_2_4, [o=1:O, a=1:A], seen_scenarios[o, 4, a] - po[o,a] <= psi_o_cap[o, a] .* M[5]) 
 
-@constraint(Step_2_4, [o=1:O, a=1:A], mu_o_cap[o, a] <= (1 .- psi_o_cap[o, a]) .* M[3]) 
+@constraint(Step_2_4, [o=1:O, a=1:A], mu_o_cap[o, a] <= (1 .- psi_o_cap[o, a]) .* M[6]) 
 
-@constraint(Step_2_4, [o=1:O, a=1:A], po[o, a] <= psi_o_undercap[o, a] .* M[3])
+@constraint(Step_2_4, [o=1:O, a=1:A], po[o, a] <= psi_o_undercap[o, a] .* M[5])
 
-@constraint(Step_2_4, [o=1:O, a=1:A], mu_o_undercap[o, a] <= (1 .- psi_o_undercap[o, a]) .* M[3]) 
+@constraint(Step_2_4, [o=1:O, a=1:A], mu_o_undercap[o, a] <= (1 .- psi_o_undercap[o, a]) .* M[6]) 
 
 for n=1:N
     for m=1:N   
@@ -202,9 +202,9 @@ for n=1:N
                 @constraint(Step_2_4,
                 0 <= transm_capacity[n,m] - B * (theta[n, a] - theta[m, a])) # transmission capacity constraint
                 @constraint(Step_2_4,
-                transm_capacity[n,m] - B * (theta[n, a] - theta[m, a]) <= psi_n_m_cap[n,m,a] .* M[4])
+                transm_capacity[n,m] - B * (theta[n, a] - theta[m, a]) <= psi_n_m_cap[n,m,a] .* M[7])
                 @constraint(Step_2_4,
-                rho_cap[n,m,a] <= (1 .- psi_n_m_cap[n,m,a]) .* M[4])
+                rho_cap[n,m,a] <= (1 .- psi_n_m_cap[n,m,a]) .* M[8])
             end
         end
     end
@@ -217,9 +217,9 @@ for n=1:N
                 @constraint(Step_2_4,
                 0 <= transm_capacity[n,m] + B * (theta[n, a] - theta[m, a]))
                 @constraint(Step_2_4,
-                transm_capacity[n,m] + B * (theta[n, a] - theta[m, a]) <= psi_n_m_undercap[n,m,a] .* M[4])
+                transm_capacity[n,m] + B * (theta[n, a] - theta[m, a]) <= psi_n_m_undercap[n,m,a] .* M[7])
                 @constraint(Step_2_4,
-                rho_undercap[n,m,a] <= (1 .- psi_n_m_undercap[n,m,a]) .* M[4])
+                rho_undercap[n,m,a] <= (1 .- psi_n_m_undercap[n,m,a]) .* M[8])
             end 
         end
     end

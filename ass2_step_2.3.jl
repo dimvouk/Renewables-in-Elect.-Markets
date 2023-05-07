@@ -29,7 +29,7 @@ N = 6
 # Sucseptance
 B = 50
 # Big M 
-M = [10000, 155, 10000, 10000]
+M = [500, 10, 250, 12, 400, 25, 5000, 20000]
 # Create a function that returns the connected nodes in an ingoing and outgoing direction
 connections = length(transm_connections_2_3)
 function connected_nodes(node)
@@ -168,55 +168,41 @@ end
 
 @constraint(Step_2_3, [d=1:D], demand_cons[d] - pd[d] <= psi_d_cap[d] * M[1]) 
 
-@constraint(Step_2_3, [d=1:D], mu_d_cap[d] <= (1-psi_d_cap[d]) * M[1]) 
+@constraint(Step_2_3, [d=1:D], mu_d_cap[d] <= (1-psi_d_cap[d]) * M[2]) 
 
 @constraint(Step_2_3, [d=1:D], pd[d] <= psi_d_undercap[d] * M[1])
 
-@constraint(Step_2_3, [d=1:D], mu_d_undercap[d] <= (1-psi_d_undercap[d]) * M[1]) 
+@constraint(Step_2_3, [d=1:D], mu_d_undercap[d] <= (1-psi_d_undercap[d]) * M[2]) 
 
 @constraint(Step_2_3, [s=1:S], 0 <= strat_gen_cap[s] - ps[s]) # Strategic producer capacity constraint
 
-@constraint(Step_2_3, [s=1:S], strat_gen_cap[s] - ps[s] <= psi_s_cap[s] * M[2]) 
+@constraint(Step_2_3, [s=1:S], strat_gen_cap[s] - ps[s] <= psi_s_cap[s] * M[3]) 
 
-@constraint(Step_2_3, [s=1:S], mu_s_cap[s] <= (1-psi_s_cap[s]) * M[2]) 
+@constraint(Step_2_3, [s=1:S], mu_s_cap[s] <= (1-psi_s_cap[s]) * M[4]) 
 
-@constraint(Step_2_3, [s=1:S], ps[s] <= psi_s_undercap[s] * M[2])
+@constraint(Step_2_3, [s=1:S], ps[s] <= psi_s_undercap[s] * M[3])
 
-@constraint(Step_2_3, [s=1:S], mu_s_undercap[s] <= (1-psi_s_undercap[s]) * M[2]) 
+@constraint(Step_2_3, [s=1:S], mu_s_undercap[s] <= (1-psi_s_undercap[s]) * M[4]) 
 
 @constraint(Step_2_3, [o=1:O], 0 <= non_strat_gen_cap[o] - po[o]) # Non-stratgic producer capacity constraint
 
-@constraint(Step_2_3, [o=1:O], non_strat_gen_cap[o] - po[o] <= psi_o_cap[o] * M[3]) 
+@constraint(Step_2_3, [o=1:O], non_strat_gen_cap[o] - po[o] <= psi_o_cap[o] * M[5]) 
 
-@constraint(Step_2_3, [o=1:O], mu_o_cap[o] <= (1-psi_o_cap[o]) * M[3]) 
+@constraint(Step_2_3, [o=1:O], mu_o_cap[o] <= (1-psi_o_cap[o]) * M[6]) 
 
-@constraint(Step_2_3, [o=1:O], po[o] <= psi_o_undercap[o] * M[3])
+@constraint(Step_2_3, [o=1:O], po[o] <= psi_o_undercap[o] * M[5])
 
-@constraint(Step_2_3, [o=1:O], mu_o_undercap[o] <= (1-psi_o_undercap[o]) * M[3]) 
+@constraint(Step_2_3, [o=1:O], mu_o_undercap[o] <= (1-psi_o_undercap[o]) * M[6]) 
 
 for n=1:N
     for m=1:N   
         if transm_capacity_2_3[n,m] != 0
             @constraint(Step_2_3,
             0 <= transm_capacity_2_3[n,m] - B * (theta[n] - theta[m])) # transmission capacity constraint
-        end
-    end
-end
-
-for n=1:N
-    for m=1:N   
-        if transm_capacity_2_3[n,m] != 0
             @constraint(Step_2_3,
-            transm_capacity_2_3[n,m] - B * (theta[n] - theta[m]) <= psi_n_m_cap[n,m] .* M[4])
-        end
-    end
-end
-
-for n=1:N
-    for m=1:N   
-        if transm_capacity_2_3[n,m] != 0
+            transm_capacity_2_3[n,m] - B * (theta[n] - theta[m]) <= psi_n_m_cap[n,m] .* M[7])
             @constraint(Step_2_3,
-            rho_cap[n,m] <= (1 .- psi_n_m_cap[n,m]) .* M[4])
+            rho_cap[n,m] <= (1 .- psi_n_m_cap[n,m]) .* M[8])
         end
     end
 end
@@ -226,24 +212,10 @@ for n=1:N
         if transm_capacity_2_3[n,m] != 0
             @constraint(Step_2_3,
             0 <= transm_capacity_2_3[n,m] + B * (theta[n] - theta[m]))
-        end
-    end
-end
-
-for n=1:N
-    for m=1:N   
-        if transm_capacity_2_3[n,m] != 0
             @constraint(Step_2_3,
-            transm_capacity_2_3[n,m] + B * (theta[n] - theta[m]) <= psi_n_m_undercap[n,m] .* M[4])
-        end
-    end
-end
-
-for n=1:N
-    for m=1:N   
-        if transm_capacity_2_3[n,m] != 0
+            transm_capacity_2_3[n,m] + B * (theta[n] - theta[m]) <= psi_n_m_undercap[n,m] .* M[7])
             @constraint(Step_2_3,
-            rho_undercap[n,m] <= (1 .- psi_n_m_undercap[n,m]) .* M[4])
+            rho_undercap[n,m] <= (1 .- psi_n_m_undercap[n,m]) .* M[8])
         end
     end
 end
@@ -300,7 +272,7 @@ if termination_status(Step_2_3) == MOI.OPTIMAL
     for n=1:N
         for m=1:N
             if transm_capacity_2_3[n,m] != 0
-                println("n$n, m$m: ", B*(value.(theta[n]) - value.(theta[m])))
+                println("Transmission n$n, m$m: ", B*(value.(theta[n]) - value.(theta[m])))
             end
         end
     end
