@@ -32,12 +32,12 @@ transm_capacity =  [[0     2000  2000   0     0     0   ];
 ]
 
 # 2.3 Capacity of "congested" transmission lines between each node in MW
-transm_capacity_2_3 =  [[0     2000  2000   0     0     0   ];
-                    [2000  0     2000   257.12  0     0   ];
-                    [2000  2000  0      0     0     217.87];
-                    [0     257.12  0      0     2000  2000];
-                    [0     0     0      2000  0     2000];
-                    [0     0     217.87   2000  2000     0];
+transm_capacity_2_3 =  [[0     2000     2000    0       0     0     ];
+                        [2000  0        2000    254.25  0     0     ];
+                        [2000  2000     0       0       0     220.75];
+                        [0     254.25   0       0       2000  2000  ];
+                        [0     0        0       2000    0     2000  ];
+                        [0     0        220.75  2000    2000  0     ];
 ]
 
 # make a list of all connections in transm_capacity
