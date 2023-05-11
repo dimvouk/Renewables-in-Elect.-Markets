@@ -1,6 +1,6 @@
 """
 Sensitivity analysis 
-- step 1.4.2 
+- step 1.4.2 and 1.5.d
 - 2-price scheme 
 - 200 in sample scenarios
 - 400 out of sample scenario
