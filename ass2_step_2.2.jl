@@ -8,11 +8,6 @@ using CSV, DataFrames
 #Get Data
 include("ass2_step_2_data.jl")
 
-strat_gen_cap = gen_cap[1:4]
-strat_gen_cost = gen_cost[1:4]
-non_strat_gen_cap = gen_cap[5:8]
-non_strat_gen_cost = gen_cost[5:8]
-
 #**************************************************
 
 # Generator Set
@@ -29,63 +24,6 @@ N = 6
 B = 50
 # Big M 
 M = [500, 10, 250, 10, 400, 100, 5000, 10000]
-
-# Create a function that returns the connected nodes in an ingoing and outgoing direction
-connections = length(transm_connections)
-function connected_nodes(node)
-    outgoing = []
-    ingoing = []
-    for i=1:connections
-        if node == transm_connections[i][1]
-            push!(outgoing, transm_connections[i][2])
-        elseif node == transm_connections[i][2]
-            push!(ingoing, transm_connections[i][1])
-        end
-    end
-    return(outgoing, ingoing)
-end
-
-# make functions receiving a demand, strategic or non-strategic generator as input
-# and returning it's node location as output.
-
-function node_demands(demand)
-    loc_demands = 0
-    for i=1:length(node_dem)
-        if node_dem[i] == []
-            continue
-        end
-        if node_dem[i][1] == demand
-            loc_demands = i
-        end
-    end
-    return(loc_demands)
-end
-
-function node_strat_gen(strat)
-    loc_strat = 0
-    for i=1:length(strat_node_gen)
-        if strat_node_gen[i] == []
-            continue
-        end
-        if strat_node_gen[i][1] == strat
-            loc_strat = i
-        end
-    end
-    return(loc_strat)
-end
-
-function node_non_strat_gen(nonstrat)
-    loc_non_strat = 0
-    for i=1:length(non_strat_node_gen)
-        if non_strat_node_gen[i] == []
-            continue
-        end
-        if non_strat_node_gen[i][1] == nonstrat
-            loc_non_strat = i
-        end
-    end 
-    return(loc_non_strat)
-end
 
 #**************************************************
 # MODEL

@@ -8,7 +8,7 @@ using Random, Distributions
 
 # Import scenarios
 Random.seed!(1234)
-include("Scenario generation.jl")
+include("ass2_Step_1_Scenario_generation.jl")
 
 # Define parameters
 T = 24 # Number of time periods

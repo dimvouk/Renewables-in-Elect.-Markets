@@ -60,21 +60,6 @@ end
 # Reference constraintnode
 @constraint(Step_2_1, theta[1] == 0)
 
-# Create a function that returns the connected nodes in an ingoing and outgoing direction
-connections = length(transm_connections)
-function connected_nodes(node)
-    outgoing = []
-    ingoing = []
-    for i=1:connections
-        if node == transm_connections[i][1]
-            push!(outgoing, transm_connections[i][2])
-        elseif node == transm_connections[i][2]
-            push!(ingoing, transm_connections[i][1])
-        end
-    end
-    return(outgoing, ingoing)
-end
-
 # Elasticity constraint, balancing supply and demand
 @constraint(Step_2_1, powerbalance[n=1:N],
                 0 == sum(pd[d] for d in node_dem[n]) + # Demand
