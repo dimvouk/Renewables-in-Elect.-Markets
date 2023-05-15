@@ -209,7 +209,7 @@ if termination_status(Step_2_4) == MOI.OPTIMAL
     # Expected Social welfare
     social_welfare = sum(prob .*
     (sum(unseen_scenarios[d, 2, a] * value.(pd[d, a]) for d in 1:D)
-    - sum(strat_gen_cost[s] * str_offer_schedule[s, a] for s in 1:S)
+    - sum(str_offer_price[s] * str_offer_schedule[s, a] for s in 1:S)
     - sum(unseen_scenarios[o, 1, a] * non_str_offer_schedule[o, a] for o in 1:O))
     for a in 1:A)
     println("Social welfare: ", social_welfare)

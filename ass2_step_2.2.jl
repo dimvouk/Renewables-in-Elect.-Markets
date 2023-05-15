@@ -200,9 +200,9 @@ if termination_status(Step_2_2) == MOI.OPTIMAL
     end
 
     # Social welfare
-    social_welfare = sum(demand_bid[d] * value.(pd[d]) for d in 1:D)
-                    - sum(strat_gen_cost[s] * str_offer_schedule[s] for s in 1:S)
-                    - sum(non_strat_gen_cost[o] * non_str_offer_schedule[o] for o in 1:O)
+    social_welfare = (sum(demand_bid[d] * value.(pd[d]) for d in 1:D)
+                    - sum(str_offer_price[s] * str_offer_schedule[s] for s in 1:S)
+                    - sum(non_strat_gen_cost[o] * non_str_offer_schedule[o] for o in 1:O))
     println("Social welfare: ", social_welfare)
 
     # print power flow from node n to node m
