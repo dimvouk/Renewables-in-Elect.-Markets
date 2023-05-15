@@ -3,7 +3,7 @@ using JuMP
 using Gurobi
 using Printf
 using CSV, DataFrames
-
+@time begin
 #**************************************************
 #Get Data
 include("ass2.1_data.jl")
@@ -221,6 +221,7 @@ end
 #************************************************************************
 # Solve
 solution = optimize!(Step_2_2)
+end
 #**************************************************
 
 # Print results

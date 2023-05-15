@@ -3,7 +3,7 @@ using JuMP
 using Gurobi
 using Printf
 using Random, Distributions 
-
+@time begin
 # ----------------------------- Input data -----------------------------#
 
 # Import scenarios
@@ -50,7 +50,7 @@ end
 
 # Solve model
 optimize!(Step_1_2)
-
+end
 #----------------------------- Results -----------------------------#
 
 if termination_status(Step_1_2) == MOI.OPTIMAL

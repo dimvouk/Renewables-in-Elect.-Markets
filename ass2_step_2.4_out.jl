@@ -26,11 +26,12 @@ N = 6
 # Sucseptance
 B = 50
 # Seen scenarios
-A = 20
+A = 1276
 # Probability of each scenario
 prob = 1/A
 # Big M 
 M = [500, 10000, 250, 120, 400, 25, 5000, 5]
+alpha_s_offer = [18.8383, 23.4, 18.8383, 23.0702]
 
 # Create a function that returns the connected nodes in an ingoing and outgoing direction
 connections = length(transm_connections)
@@ -97,7 +98,7 @@ Step_2_4=Model(Gurobi.Optimizer)
 
 #Variables
 @variables Step_2_4 begin
-    alpha_s_offer[s=1:S] >=0
+    #alpha_s_offer[s=1:S] >=0
     ps[s=1:S, a=1:A] >=0
     po[o=1:O, a=1:A] >=0
     pd[d=1:D, a=1:A] >=0
@@ -128,10 +129,10 @@ end
 @objective(Step_2_4, Max,
 sum(prob * (
 - sum(ps[s, a] * strat_gen_cost[s] for s=1:S) # Total cost of strategic generator production
-+ sum(seen_scenarios[d, 2, a] * pd[d, a] for d=1:D) # Total demand value
-- sum(seen_scenarios[o, 1, a] * po[o, a] for o=1:O) # Total cost of non-strategic generator production
-- sum(mu_d_cap[d, a] * seen_scenarios[d, 3, a] for d=1:D) 
-- sum(mu_o_cap[o, a] * seen_scenarios[o, 4, a] for o = 1:O)
++ sum(unseen_scenarios[d, 2, a] * pd[d, a] for d=1:D) # Total demand value
+- sum(unseen_scenarios[o, 1, a] * po[o, a] for o=1:O) # Total cost of non-strategic generator production
+- sum(mu_d_cap[d, a] * unseen_scenarios[d, 3, a] for d=1:D) 
+- sum(mu_o_cap[o, a] * unseen_scenarios[o, 4, a] for o = 1:O)
 - sum(rho_undercap[n, m, a] * transm_capacity[n, m] for n=1:N, m in connected_nodes(n)[2])
 - sum(rho_cap[n, m, a] * transm_capacity[n, m] for n=1:N, m in connected_nodes(n)[2])
 ) for a=1:A))
@@ -141,13 +142,13 @@ sum(prob * (
 
 @constraint(Step_2_4, [s=1:S], alpha_s_offer[s] >= strat_gen_cost[s])
 
-@constraint(Step_2_4, [d=1:D, a=1:A], - seen_scenarios[d, 2, a] + mu_d_cap[d, a] - mu_d_undercap[d, a] 
+@constraint(Step_2_4, [d=1:D, a=1:A], - unseen_scenarios[d, 2, a] + mu_d_cap[d, a] - mu_d_undercap[d, a] 
             + lambda[node_demands(d), a] == 0)  # Dual of demand capacity constraint
 
 @constraint(Step_2_4, [s=1:S, a=1:A], alpha_s_offer[s] + mu_s_cap[s, a] - mu_s_undercap[s, a] 
             - lambda[node_strat_gen(s), a] == 0) # Dual of strategic capacity constraint
 
-@constraint(Step_2_4, [o=1:O, a=1:A], seen_scenarios[o, 1, a] + mu_o_cap[o, a] - mu_o_undercap[o, a] 
+@constraint(Step_2_4, [o=1:O, a=1:A], unseen_scenarios[o, 1, a] + mu_o_cap[o, a] - mu_o_undercap[o, a] 
             - lambda[node_non_strat_gen(o), a] == 0) # Dual of non-strategic capacity constraint
 
 @constraint(Step_2_4, [n=1:N, a=1:A],
@@ -167,9 +168,9 @@ sum(prob * (
                 - sum(po[o, a] for o in non_strat_node_gen[n]) == 0
 )
 
-@constraint(Step_2_4, [d=1:D, a=1:A], 0 <= seen_scenarios[d, 3, a] - pd[d, a]) # Demand capacity constraint
+@constraint(Step_2_4, [d=1:D, a=1:A], 0 <= unseen_scenarios[d, 3, a] - pd[d, a]) # Demand capacity constraint
 
-@constraint(Step_2_4, [d=1:D, a=1:A], seen_scenarios[d, 3, a] - pd[d, a] <= psi_d_cap[d, a] .* M[1]) 
+@constraint(Step_2_4, [d=1:D, a=1:A], unseen_scenarios[d, 3, a] - pd[d, a] <= psi_d_cap[d, a] .* M[1]) 
 
 @constraint(Step_2_4, [d=1:D, a=1:A], mu_d_cap[d, a] <= (1 .- psi_d_cap[d, a]) .* M[2]) 
 
@@ -187,9 +188,9 @@ sum(prob * (
 
 @constraint(Step_2_4, [s=1:S, a=1:A], mu_s_undercap[s, a] <= (1 .- psi_s_undercap[s, a]) .* M[4]) 
 
-@constraint(Step_2_4, [o=1:O, a=1:A], 0 <= seen_scenarios[o, 4, a] - po[o, a]) # Non-stratgic producer capacity constraint
+@constraint(Step_2_4, [o=1:O, a=1:A], 0 <= unseen_scenarios[o, 4, a] - po[o, a]) # Non-stratgic producer capacity constraint
 
-@constraint(Step_2_4, [o=1:O, a=1:A], seen_scenarios[o, 4, a] - po[o,a] <= psi_o_cap[o, a] .* M[5]) 
+@constraint(Step_2_4, [o=1:O, a=1:A], unseen_scenarios[o, 4, a] - po[o,a] <= psi_o_cap[o, a] .* M[5]) 
 
 @constraint(Step_2_4, [o=1:O, a=1:A], mu_o_cap[o, a] <= (1 .- psi_o_cap[o, a]) .* M[6]) 
 
@@ -261,14 +262,14 @@ if termination_status(Step_2_4) == MOI.OPTIMAL
         str_profit[s] = sum(prob .*
         (str_offer_schedule[s, a] * (mc_price[node_strat_gen(s), a] - strat_gen_cost[s])
         for a=1:A))
-        println("Expected profit of strategic producer S$s: ", str_profit[s])
+        println("Average profit of strategic producer S$s: ", str_profit[s])
     end 
 
     # Expected Social welfare
     social_welfare = sum(prob .*
-    (sum(seen_scenarios[d, 2, a] * value.(pd[d, a]) for d in 1:D)
+    (sum(unseen_scenarios[d, 2, a] * value.(pd[d, a]) for d in 1:D)
     - sum(strat_gen_cost[s] * str_offer_schedule[s, a] for s in 1:S)
-    - sum(seen_scenarios[o, 1, a] * non_str_offer_schedule[o, a] for o in 1:O))
+    - sum(unseen_scenarios[o, 1, a] * non_str_offer_schedule[o, a] for o in 1:O))
     for a in 1:A)
     println("Social welfare: ", social_welfare)
 

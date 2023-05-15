@@ -3,7 +3,7 @@ using JuMP
 using Gurobi
 using Printf
 using CSV, DataFrames
-
+@time begin
 
 #**************************************************
 #Get Data
@@ -223,6 +223,7 @@ end
 #************************************************************************
 # Solve
 solution = optimize!(Step_2_3)
+end
 #**************************************************
 
 # Print results

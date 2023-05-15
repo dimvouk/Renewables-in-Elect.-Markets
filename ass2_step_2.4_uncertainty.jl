@@ -14,7 +14,7 @@ o_offer_scenarios = zeros(6,4)
 for o=1:4
     for i=1:6
         if o == 1
-            o_offer_scenarios[i,o] = rand(Uniform(o_offer[o], o_offer[o]+5))
+            o_offer_scenarios[i,o] = o_offer[o]
         else
             o_offer_scenarios[i,o] = rand(Uniform(o_offer[o]*0.75, o_offer[o]*1.25))
         end 

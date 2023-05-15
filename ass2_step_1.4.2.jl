@@ -3,7 +3,7 @@ using JuMP
 using Gurobi
 using Printf
 using Random, Distributions 
-
+@time begin
 # ----------------------------- Input data -----------------------------#
 
 # Import scenarios
@@ -95,5 +95,5 @@ for a = 1:A
         
     end # end of beta loop
 end # end of alpha loop
-    
+end 
 println("Expected profit: ", mean(exp_profit_1_4_2))
