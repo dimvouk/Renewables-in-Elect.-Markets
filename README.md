@@ -6,30 +6,17 @@ The aim of these scripts is to solve the Assignmnent 2 of the course "46755 - Re
 --------------------------------STEP 1---------------------------------
 -----------------------------------------------------------------------
 -----------------------------------------------------------------------
-"scenario generation.jl"
+-----------------------------------------------------------------------
+-----------------------------------------------------------------------
+"ass2_step_1_Sources_of_Uncertainty_data_input.jl"
 
-This script iteratates through a for loop and creates the 600 scenarios needed for the whole step 1. The scenarios are generated randomly and are already dividede into the in-sample ("seen") and out-of-sample ("unseen") scenarios.
+This script is used to generate 3 sources of uncertainty used in Step 1: (i) the wind production values (MWh) for the 6 wind farm scenarios (ii) the day ahead prices for the 10 respective scenarios (iii) and the system need (excess or deficit) which is then randomly generated based on a Bernoulli distribution for each scenario and a specific matrix is created based on these values.  
 
 -----------------------------------------------------------------------
 -----------------------------------------------------------------------
-"Sources of Uncertainty (data input.jl)"
+"ass2_step_1_Scenario_generation.jl"
 
-This script is used to generate the wind production values (MWh) for the 6 wind farm scenarios and the day ahead prices for the 10 respective scenarios. 
-The system need (excess or deficit) is then randomly generated based on a Bernoulli distribution for each scenario and a specific matrix is created based on these values.  
-
------------------------------------------------------------------------
------------------------------------------------------------------------
-"ass2.1_data"
-
-	- Define the production capacity for conventional generators (MW)
-	- Define production cost for one hour for conventional generators in $/MWh (constant)
-	- Define demand consumption matrix for each hour and for each generator
-	- Define  cost of bids matrix for each hour and for each generator
-	- Define nodes relationship
-	- Define transmission capacity on the line to avoid congestion
-	- Re-define the transmission capacities for step 2.3 based on the results of step 2.2 (set the capacity of certain lines to the actual power flow)
-	- make a list of all connections and store them
-	- 2.3: make a list of all "congested" connections and store them
+This script iteratates through a for loop of the 3 sources of uncertainty and creates the 600 scenarios needed for the whole step 1. The scenarios are generated randomly and are already divided into the in-sample ("seen") and out-of-sample ("unseen") scenarios.
 
 -----------------------------------------------------------------------
 -----------------------------------------------------------------------
@@ -45,7 +32,7 @@ This script implements a 1-price-scheme market problem for the balancing market.
 
 -----------------------------------------------------------------------
 -----------------------------------------------------------------------
-"ass2_step_1_2.jl"
+"ass2_step_1.2.jl"
 
 Diversely from the previous script, this one runs a 2-price-scheme anmd therefore the balancing price depends both on the system status and on the fact that the wind turbine is helping the system to reduce imbalance or not. 
 This is done be including the dependency of these variables in the balancing price and therefore determing its value for each scenario.
@@ -151,7 +138,20 @@ The optimization problem is then iterated and the in-sample scenario vector "see
 --------------------------------STEP 2---------------------------------
 -----------------------------------------------------------------------
 -----------------------------------------------------------------------
+"ass2_step_2_1_data"
+Input data file used for Step 2.
+	- Define the production capacity for conventional generators (MW)
+	- Define production cost for one hour for conventional generators in $/MWh (constant)
+	- Define demand consumption matrix for each hour and for each generator
+	- Define  cost of bids matrix for each hour and for each generator
+	- Define nodes relationship
+	- Define transmission capacity on the line to avoid congestion
+	- Re-define the transmission capacities for step 2.3 based on the results of step 2.2 (set the capacity of certain lines to the actual power flow)
+	- make a list of all connections and store them
+	- 2.3: make a list of all "congested" connections and store them
 
+-----------------------------------------------------------------------
+-----------------------------------------------------------------------
 "ass2_step_2.1.jl"
 
 A situation as the one explained through Image 1 and Table 1 in the report instructions is implemented in this step through an optimisation problem. All the market players are assumed to be offering the true cost of their production so to not incllude the fact that someone may be behaving strategically.
@@ -185,16 +185,27 @@ The optimisation problem used for step 2.2 is then executed with this new data i
 
 -----------------------------------------------------------------------
 -----------------------------------------------------------------------
-"ass2_step_2.4.jl"
+"ass2_step_2.4_uncertainty.jl"
+
+In this file, for Step 2.4, we are modelling four sources of uncertainty with 6 scenarios for each: (i) the offer price of non-strategic, units O1-O4, (ii) the bid price of demands D1-D4, (iii) the quantity bid of demands, D1-D4, and finally (iv) the production of wind producer O1.  All scenarios for the four sources of uncertainty have been created by following a Uniform Distribution with ±25% around the original value. However, for the offer price of windfarm O1, the bid price will continue to be $0 in all the scenarios. All the scenarios are reasonable, as e.g. the total demand is never below the total supply. 
 
 -----------------------------------------------------------------------
 -----------------------------------------------------------------------
 "ass2_step_2.4_scenarios.jl"
 
------------------------------------------------------------------------
------------------------------------------------------------------------
-"ass2_step_2.4_uncertainty.jl"
+In this file, we combine together the four sources of uncertainty into 1296 unique scenarios. These are then split into 20 in-sample scenarios and 1276 out-of sample scenarios.
 
+-----------------------------------------------------------------------
+-----------------------------------------------------------------------
+"ass2_step_2.4_in.jl"
+
+In this file, we model the in-sample scenarios. So we replace (i) the offer price of non-strategic, units O1-O4, (ii) the bid price of demands D1-D4, (iii) the quantity bid of demands, D1-D4, and finally (iv) the production of wind producer O1, with the 20 in-sample scenarios. For that reason the objective function is also multiplied with the probability for each scenario 1/20. The values chosen for Big M are based on a sensitivity analysis, starting from high values and then lowering them as much as possible, while still obtaining the same optimal solution. Otherwise the code is the same as in Step 2.2 where there is no congestion in the transmission lines.
+
+-----------------------------------------------------------------------
+-----------------------------------------------------------------------
+"ass2_step_2.4_out.jl"
+
+Following the methodology of "ass2_step_2.4_in.jl", we now replace the 20 in-sample scenarios with the 1276 out-of sample scenarios. Furthermore, we change the strategic offer price "alpha_s_offer" from a decision variable to a parameter with the values obtained in "ass2_step_2.4_in.jl". The values for big M are the same as in "ass2_step_2.4_in.jl".
 
 
 
