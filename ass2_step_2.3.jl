@@ -7,7 +7,7 @@ using CSV, DataFrames
 
 #**************************************************
 #Get Data
-include("ass2.1_data.jl")
+include("ass2_step_2_data.jl")
 
 strat_gen_cap = gen_cap[1:4]
 strat_gen_cost = gen_cost[1:4]

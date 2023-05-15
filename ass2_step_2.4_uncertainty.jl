@@ -2,7 +2,7 @@
 using Random, Distributions 
 
 # import data
-include("ass2.1_data.jl")
+include("ass2_step_2_data.jl")
 
 # Change in +- 25% is chosen for all sources of uncertainty, as this is a reasonable change in the market
 # and keeps demand lower than supply in all scenarios.
