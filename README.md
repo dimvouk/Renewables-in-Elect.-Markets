@@ -207,7 +207,17 @@ In this file, we model the in-sample scenarios. So we replace (i) the offer pric
 
 Following the methodology of "ass2_step_2.4_in.jl", we now replace the 20 in-sample scenarios with the 1276 out-of sample scenarios. Furthermore, we change the strategic offer price "alpha_s_offer" from a decision variable to a parameter with the values obtained in "ass2_step_2.4_in.jl". The values for big M are the same as in "ass2_step_2.4_in.jl".
 
+-----------------------------------------------------------------------
+-----------------------------------------------------------------------
+"ass2_step_2.5_a.jl"
 
+In this script, we are repeating the model from Step 2.1 but where we include 24 hours and ramping limits. Therefore it is taking updated data input with wind production and demand bids and quantity for 24 hours, it includes an index for t and it includes two extra constraints for the ramping limits. The output only looks at the market clearing price.
+
+-----------------------------------------------------------------------
+-----------------------------------------------------------------------
+"ass2_step_25_b.jl"
+
+In this script, we are doing as in "ass2_step_2.5_a.jl", but based on Step 2.2 instead. It is also taking updated data input with wind production and demand bids and quantity for 24 hours, it includes an index for t and it includes two extra constraints for the ramping limits. The output only looks at the market clearing price.
 
 
 
